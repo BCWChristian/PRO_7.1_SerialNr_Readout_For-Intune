@@ -173,7 +173,7 @@ try {
         }
         
         Write-Host "Lade Inventardaten hoch zu Azure Blob Storage..."
-        $Response = Invoke-RestMethod -Uri $UploadUrl -Method Put -Headers $Headers -Body $Bytes -ContentType "text/csv; charset=utf-8"
+        $null = Invoke-RestMethod -Uri $UploadUrl -Method Put -Headers $Headers -Body $Bytes -ContentType "text/csv; charset=utf-8" -TimeoutSec 120
         Write-Host "Azure Upload erfolgreich! Blob-Name: $BlobName"
     } else {
         # Lokaler Test-Mock (wenn ein lokaler Ordnerpfad übergeben wird)
