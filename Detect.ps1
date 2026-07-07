@@ -4,7 +4,8 @@ function Get-PhysicalSerialNumber {
         [string]$InstanceId
     )
     $currentId = $InstanceId
-    while ($currentId) {
+    $maxDepth = 20
+    while ($currentId -and $maxDepth-- -gt 0) {
         $parts = $currentId -split '\\'
         if ($parts.Count -gt 1) {
             $lastPart = $parts[-1]
