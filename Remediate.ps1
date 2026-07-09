@@ -129,16 +129,21 @@ $Properties = [ordered]@{
     DockSerialNumber = $DockSerials
 }
 
-# Add each monitor in its own separate lane (column)
-if ($ActiveMonitors.Count -gt 0) {
-    for ($i = 0; $i -lt $ActiveMonitors.Count; $i++) {
-        $num = $i + 1
+# Add each monitor in its own separate lane (column), padded to a fixed 5 slots
+$MaxMonitors = 5
+for ($i = 0; $i -lt $MaxMonitors; $i++) {
+    $num = $i + 1
+    if ($i -lt $ActiveMonitors.Count) {
         $Properties["MonitorModel_$num"] = $ActiveMonitors[$i].Name
         $Properties["MonitorSerialNumber_$num"] = $ActiveMonitors[$i].Serial
+    } else {
+        if ($i -eq 0 -and $ActiveMonitors.Count -eq 0) {
+            $Properties["MonitorModel_1"] = "No active Monitors found"
+        } else {
+            $Properties["MonitorModel_$num"] = "N/A"
+        }
+        $Properties["MonitorSerialNumber_$num"] = "N/A"
     }
-} else {
-    $Properties["MonitorModel_1"] = "No active Monitors found"
-    $Properties["MonitorSerialNumber_1"] = "N/A"
 }
 
 $Properties["UsbPrinterName"]   = $PrinterNames
