@@ -112,15 +112,7 @@ if ($Docks) {
     $DockSerials = ($Docks | ForEach-Object { Get-PhysicalSerialNumber -InstanceId $_.InstanceId }) -join "; "
 }
 
-# 6. Extract monitor data
-$MonitorNames = "No active Monitors found"
-$MonitorSerials = "N/A"
-if ($ActiveMonitors.Count -gt 0) {
-    $MonitorNames = ($ActiveMonitors | ForEach-Object { $_.Name }) -join "; "
-    $MonitorSerials = ($ActiveMonitors | ForEach-Object { $_.Serial }) -join "; "
-}
-
-# 7. Extract USB printer data
+# 6. Extract USB printer data
 $PrinterNames = "No USB-Printers found"
 $PrinterSerials = "N/A"
 if ($UsbPrinters.Count -gt 0) {
@@ -128,19 +120,32 @@ if ($UsbPrinters.Count -gt 0) {
     $PrinterSerials = ($UsbPrinters | ForEach-Object { $_.Serial }) -join "; "
 }
 
-# 8. Merge data for the CSV
-$InventoryData = [PSCustomObject]@{
-    ComputerName        = $ComputerName
-    LoggedInUser        = $LoggedInUser
-    BiosSerialNumber    = $BiosSerial
-    DockName            = $DockNames
-    DockSerialNumber    = $DockSerials
-    MonitorModel        = $MonitorNames
-    MonitorSerialNumber = $MonitorSerials
-    UsbPrinterName      = $PrinterNames
-    UsbPrinterSerial    = $PrinterSerials
-    Timestamp           = $Timestamp
+# 7. Merge data for the CSV (Multi-Monitor support)
+$Properties = [ordered]@{
+    ComputerName     = $ComputerName
+    LoggedInUser     = $LoggedInUser
+    BiosSerialNumber = $BiosSerial
+    DockName         = $DockNames
+    DockSerialNumber = $DockSerials
 }
+
+# Add each monitor in its own separate lane (column)
+if ($ActiveMonitors.Count -gt 0) {
+    for ($i = 0; $i -lt $ActiveMonitors.Count; $i++) {
+        $num = $i + 1
+        $Properties["MonitorModel_$num"] = $ActiveMonitors[$i].Name
+        $Properties["MonitorSerialNumber_$num"] = $ActiveMonitors[$i].Serial
+    }
+} else {
+    $Properties["MonitorModel_1"] = "No active Monitors found"
+    $Properties["MonitorSerialNumber_1"] = "N/A"
+}
+
+$Properties["UsbPrinterName"]   = $PrinterNames
+$Properties["UsbPrinterSerial"] = $PrinterSerials
+$Properties["Timestamp"]        = $Timestamp
+
+$InventoryData = [PSCustomObject]$Properties
 
 # 9. Generate CSV content and convert to UTF-8
 $CsvContent = $InventoryData | ConvertTo-Csv -NoTypeInformation -Delimiter ";" | Out-String
